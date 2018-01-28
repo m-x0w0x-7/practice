@@ -19,6 +19,9 @@
       height: 50px;
       border: 1px solid #666;
       color: #333;
+      font-size: 26px;
+      text-align: center;
+      vertical-align: middle;
     }
   </style>
 </head>
@@ -26,20 +29,30 @@
   <h1>○×ゲーム</h1>
   <table>
     <tr>
-      <td></td>
-      <td></td>
-      <td></td>
+      <td onclick="clickMe(this)"></td>
+      <td onclick="clickMe(this)"></td>
+      <td onclick="clickMe(this)"></td>
     </tr>
     <tr>
-      <td></td>
-      <td></td>
-      <td></td>
+      <td onclick="clickMe(this)"></td>
+      <td onclick="clickMe(this)"></td>
+      <td onclick="clickMe(this)"></td>
     </tr>
     <tr>
-      <td></td>
-      <td></td>
-      <td></td>
+      <td onclick="clickMe(this)"></td>
+      <td onclick="clickMe(this)"></td>
+      <td onclick="clickMe(this)"></td>
     </tr>
   </table>
+  <script>
+    var count = 0;
+    function clickMe(e) {
+      if (count++ % 2 == 0) {
+        e.textContent = "◯";
+      } else {
+        e.textContent = "×";
+      }
+    }
+  </script>
 </body>
 </html>
