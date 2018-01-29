@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>game02</title>
+  <style>
+    h1 {
+      font-size: 20px;
+      font-weight: normal;
+    }
+    div {
+      position: absolute;
+      top: 100px;
+      width: 60px;
+      height:25px;
+      color: red;
+    }
+  </style>
+</head>
+<body onload="init()">
+  <h1>左右キーでUFOが動きます。</h1>
+  <div id="ufo"><(○○○)></div>
+  <script>
+    var ufo, newufo;
+    function init() {
+      window.addEventListener("keydown", keydown); //keydownイベントのハンドラーを登録
+      var ufo = new UFO(document.getElementById("ufo"), 100); //オブジェクトを作成
+      NewUFO.prototype = ufo; //prototypeで関連付け（オブジェクトを作るための関数（コンストラクタ））
+      newufo = new NewUFO(100); //新しいnewufoオブジェクトを作成、prototypeプロパティが自動的に設定される。参照先はufoオブジェクト
+    }
+    function keydown(e) {
+      if (e.keyCode == 37) {
+        newufo.moveLeft(); //オブジェクトのメソッドを呼ぶ
+      } else if (e.keyCode == 39) {
+        newufo.moveRight(); //オブジェクトのメソッドを呼ぶ
+      } else if (e.keyCode == 38) {
+        newufo.moveUp();
+      } elese if (e.keyCode == 40) {
+        newufo.moveDown();
+      }
+    }
+    function UFO(_elem, _xpos) { //第1引数はDOM要素、第2引数はx座標の値
+      this.elem = _elem; //_elemをthis.elemに代入（オブジェクト自身のelemプロパティに<div id="ufo"><(○○○)></div>要素への参照を格納）
+      this.xpos = _xpos; //オブジェクトにxposプロパティを登録、初期値として引数の_xposを使用
+      this.moveLeft = function() { //匿名関数をmoveLeftプロパティに代入
+        this.xpos -= 10; //xposプロパティの値を10減らす
+        this.elem.style.left = this.xpos + "px"; // elem要素のleftスタイルの値を更新
+      }
+      this.moveRight = function() {
+        this.xpos += 10;
+        this.elem.style.left = this.xpos + "px";
+      }
+      this.elem.style.left = this.xpos + "px";
+    }
+    function NewUFO(_ypos) {
+      this.ypos = _ypos;
+      this.moveUp = function() {
+        this.ypos -= 10;
+        this.elem.style.top = this.ypos + "px";
+      }
+      this.moveDown = function() {
+        this.ypos += 10;
+        this.elem.style.top = this.ypos + "px";
+      }
+      this.elem.style.top = this.ypos + "px";
+    }
+  </script>
+</body>
+</html>

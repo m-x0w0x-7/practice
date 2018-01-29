@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>game02</title>
+  <style>
+    h1 {
+      font-size: 20px;
+      font-weight: normal;
+    }
+    div {
+      position: absolute;
+      top: 100px;
+      width: 60px;
+      height:25px;
+      color: red;
+    }
+  </style>
+</head>
+<body onload="init()">
+  <h1>左右キーでUFOが動きます。</h1>
+  <div id="ufo"><(○○○)></div>
+  <script>
+    var ufo;
+    function init() {
+      window.addEventListener("keydown", keydown); //keydownイベントのハンドラーを登録
+      ufo = new UFO(document.getElementById("ufo"), 100); //オブジェクトを作成
+    }
+    function keydown(e) {
+      if (e.keyCode == 37) {
+        ufo.moveLeft(); //オブジェクトのメソッドを呼ぶ
+      } else if (e.keyCode == 39) {
+        ufo.moveRight(); //オブジェクトのメソッドを呼ぶ
+      }
+    }
+    function UFO(_elem, _xpos) { //第1引数はDOM要素、第2引数はx座標の値
+      this.elem = _elem; //_elemをthis.elemに代入（オブジェクト自身のelemプロパティに<div id="ufo"><(○○○)></div>要素への参照を格納）
+      this.xpos = _xpos; //オブジェクトにxposプロパティを登録、初期値として引数の_xposを使用
+      this.moveLeft = function() { //匿名関数をmoveLeftプロパティに代入
+        this.xpos -=10; //xposプロパティの値を10減らす
+        this.elem.style.left = this.xpos + "px"; // elem要素のleftスタイルの値を更新
+      }
+      this.moveRight = function() {
+        this.xpos += 10;
+        this.elem.style.left = this.xpos + "px";
+      }
+      this.elem.style.left = this.xpos + "px";
+    }
+  </script>
+</body>
+</html>
