@@ -18,7 +18,7 @@
   </style>
 </head>
 <body onload="init()">
-  <h1>左右キーでUFOが動きます。</h1>
+  <h1>方向キーでUFOが動きます。</h1>
   <div id="ufo"><(○○○)></div>
   <script>
     var ufo, newufo;
@@ -35,7 +35,7 @@
         newufo.moveRight(); //オブジェクトのメソッドを呼ぶ
       } else if (e.keyCode == 38) {
         newufo.moveUp();
-      } elese if (e.keyCode == 40) {
+      } else if (e.keyCode == 40) {
         newufo.moveDown();
       }
     }
