@@ -47,7 +47,7 @@
           var y = Math.floor(Math.random() * H);
           if (!cell[x][y].bomb) {
             cell[x][y].bomb = true;
-            cell[x][y].textContent= '*';
+            // cell[x][y].textContent= '*';
             break;
           }
         }
@@ -70,45 +70,43 @@
       for (var j = y - 1; j <= y + 1; j++) {
         for (var i = x - 1; i <= x + 1; i++) {
           if (cell[j] && cell[j][i]) {
-            if (cell[j] && cell[j][i]) {
-              var c = cell[j][i];
-              if (c.opened || c.bomb) {
-                continue;
-              }
-              flip(c);
-              var n = count(i, j);
-              if (n == 0) {
-                open(i, j);
-              } else {
-                c.textContent = n;
-              }
+            var c = cell[j][i];
+            if (c.opened || c.bomb) {
+              continue;
+            }
+            flip(c);
+            var n = count(i, j);
+            if (n == 0) {
+              open(i, j);
+            } else {
+              c.textContent = n;
             }
           }
         }
       }
+    }
 
-      function flip(cell) {
-        cell.className = 'cell open';
-        cell.opened = true;
-        if (++opened >= (W * H - BOMB)) {
-          document.getElementById('title').textContent = 'Good Job!';
-        }
+    function flip(cell) {
+      cell.className = 'cell open';
+      cell.opened = true;
+      if (++opened >= (W * H - BOMB)) {
+        document.getElementById('title').textContent = 'Good Job!';
       }
+    }
 
-      function click(e) {
-        var src = e.currentTarget;
-        if (src.bomb) {
-          cell.forEach(function (tr) {
-            tr.forEach(function (td) {
-              if (td.bomb) {
-                td.text.Content = '+';
-              }
-            })
-          });
-          document.getElementById('title').textContent = 'Game Over';
-        } else {
-          open(src.x, src.y);
-        }
+    function click(e) {
+      var src = e.currentTarget;
+      if (src.bomb) {
+        cell.forEach(function (tr) {
+          tr.forEach(function (td) {
+            if (td.bomb) {
+              td.textContent = '+';
+            }
+          })
+        });
+        document.getElementById('title').textContent = 'Game Over';
+      } else {
+        open(src.x, src.y);
       }
     }
   </script>
