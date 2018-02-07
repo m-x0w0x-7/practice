@@ -116,7 +116,7 @@
     }
 
     function mainLoop() {
-      // move the Paddle
+      // move the paddle
       if (paddle.keyL) {
         paddle.x = Math.max(0, paddle.x - 10)
       }
@@ -170,7 +170,7 @@
         score += blocks[hit].point;
         blocks.splice(hit, 1);
 
-        if (blocks.length <= 0) { // cleaned
+        if (blocks.length <= 0) { // cleared
           ball.y = HEIGHT + ball.r;
           start();
           return;
@@ -188,7 +188,7 @@
     function drawBall(x, y, r) {
       ctx.fillStyle = 'yellow';
       ctx.beginPath();
-      ctx.arc(x, y, r, 0, MathPI * 2, true);
+      ctx.arc(x, y, r, 0, Math.PI * 2, true);
       ctx.fill();
     }
 
@@ -202,12 +202,12 @@
         block.draw(ctx);
       });
 
-      // draw Paddle
+      // draw paddle
       paddle.draw(ctx);
 
       // draw balls
       ball.draw(ctx);
-      if (balls > 2) { drawBall(80, 50, 10); }
+      if (balls > 2) { drawBall(80, 15, 10); }
       if (balls > 1) { drawBall(50, 15, 10); }
 
       // draw score & information
