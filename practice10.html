@@ -40,9 +40,9 @@
       ctx.beginPath();
       ctx.moveTo(x, y);
       if (isOpen) {
-        ctx.arc(x, y, 30, -Math.PI / 4, Math.PI / 4, true);
+        ctx.arc(x, y, 30, -Math.PI / 4, Math.PI / 4, true); // 口が開いた状態
       } else {
-        ctx.arc(x, y, 30, 0, Math.PI * 2, true);
+        ctx.arc(x, y, 30, 0, Math.PI * 2, true); // 口が閉じた状態
       }
       ctx.fill();
     }

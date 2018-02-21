@@ -10,16 +10,16 @@
   <script>
     var ctx;
     function init() {
-      var canvas = document.getElementById('canvas');
-      ctx = canvas.getContext('2d');
+      var canvas = document.getElementById('canvas'); // canvasを取得
+      ctx = canvas.getContext('2d'); // キャンバスのgetContext('2d')メソッドを呼ぶことでコンテキストを取得
       ctx.strokeStyle = '#ff0000';
       ctx.fillStyle = '#00ffff';
       ctx.lineWidth = 5;
 
-      ctx.fillRect(100, 30, 80, 50);
-      ctx.strokeRect(200, 30, 80, 50);
+      ctx.fillRect(100, 30, 80, 50); // x,yを左上とする幅width、高さheightの矩形を塗りつぶす
+      ctx.strokeRect(200, 30, 80, 50); // x,yを左上とする幅width、高さheightの矩形の枠線を描画
       ctx.fillRect(300, 30, 80, 50);
-      ctx.clearRect(320, 50, 50, 20);
+      ctx.clearRect(320, 50, 50, 20); // x,yを左上とする幅width、高さheightの矩形領域をクリア（クリアした部分は透明になる）
     }
   </script>
 </body>
