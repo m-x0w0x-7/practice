@@ -47,7 +47,7 @@
   <script>
     var count = 0;
     function clickMe(e) {
-      if (count++ % 2 == 0) {
+      if (count++ % 2 == 0) { //countを1ずつ増やし、2で割ったあまりが0のとき
         e.textContent = "◯";
       } else {
         e.textContent = "×";

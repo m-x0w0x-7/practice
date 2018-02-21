@@ -23,7 +23,7 @@
   <script>
     var ufo;
     function init() {
-      window.addEventListener("keydown", keydown); //keydownイベントのハンドラーを登録
+      window.addEventListener("keydown", keydown); //keydownイベントのハンドラーを登録（キーが押下されたときにkeydown関数が実行される）
       ufo = new UFO(document.getElementById("ufo"), 100); //オブジェクトを作成
     }
     function keydown(e) {

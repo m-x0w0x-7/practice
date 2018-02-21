@@ -20,10 +20,11 @@
 <body onload="init()">
   <h1>方向キーでUFOが動きます。</h1>
   <div id="ufo"><(○○○)></div>
+
   <script>
     var ufo, newufo;
     function init() {
-      window.addEventListener("keydown", keydown); //keydownイベントのハンドラーを登録
+      window.addEventListener("keydown", keydown); //keydownイベントのハンドラーを登録（キーが押下されたときにkeydown関数が実行される）
       var ufo = new UFO(document.getElementById("ufo"), 100); //オブジェクトを作成
       NewUFO.prototype = ufo; //prototypeで関連付け（オブジェクトを作るための関数（コンストラクタ））
       newufo = new NewUFO(100); //新しいnewufoオブジェクトを作成、prototypeプロパティが自動的に設定される。参照先はufoオブジェクト
