@@ -16,17 +16,17 @@
       ctx = canvas.getContext('2d');
 
       for (var i = 0; i < 12; i++) {
-        ctx.save();
+        ctx.save(); // コンテキスト（座標系）を保存
         var r = Math.PI / 6 * i;
-        ctx.translate(100, 100);
-        ctx.rotate(r);
+        ctx.translate(100, 100); // 座標系の原点をx方向に100、y方向に100移動
+        ctx.rotate(r); // 座標系をr回転
 
         ctx.beginPath();
         ctx.moveTo(0, -60);
         ctx.lineTo(0, -50);
         ctx.stroke();
 
-        ctx.restore();
+        ctx.restore(); // コンテキストをctx.save()で保存したものに復元
       }
     }
   </script>

@@ -29,10 +29,10 @@
     }
 
     function tick() {
-      var now = new Date();
-      h = now.getHours() % 12;
-      m = now.getMinutes();
-      s = now.getSeconds();
+      var now = new Date(); // 現在時刻を取得
+      h = now.getHours() % 12; // 時を取得
+      m = now.getMinutes(); // 分を取得
+      s = now.getSeconds(); // 秒を取得
       gobj('time').textContent = now.toTimeString();
       paint();
     }

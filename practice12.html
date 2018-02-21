@@ -17,12 +17,14 @@
       ctx.font = "32px 'MS ゴシック'";
 
       ctx.strokeStyle = 'blue';
+			// ctx.fillText(text, x, y [,maxWidth]); x,y座標を起点としてtextを塗りつぶして描画
       ctx.strokeText('strokeTextによる文字', 10, 50);
 
       ctx.fillStyle = 'green';
+			// ctx.strokeText(text, x, y, [,maxWidth]); x,y座標を起点としてtextの輪郭を描画
       ctx.fillText('fillTextによる文字', 10, 100);
 
-      ctx.fillStyle = 'red';
+      ctx.fillStyle = 'red'; // maxWidthで最大値を指定
       ctx.fillText('ABCDEFGHIJKLMNOPQRSTUVWXYZ', 10, 150, 200);
     }
   </script>
