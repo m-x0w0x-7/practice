@@ -27,20 +27,21 @@
     // 初期関数
     function init() {
       var canvas = document.getElementById('field');
-      W = canvas.width / S;
-      H = canvas.height / S;
-      ctx = canvas.getContext('2d');
+      W = canvas.width / S; // 400 / 20 = 20
+      H = canvas.height / S; // 400 / 20 = 20
+			// 20 x 20 のマスがゲーム領域
+      ctx = canvas.getContext('2d'); // canvasのコンテキストをグローバル関数ctxに格納
       ctx.font = '20px sans-serif';
 
       // 蛇の初期化
-      snake.push(new Point(W / 2, H / 2));
+      snake.push(new Point(W / 2, H / 2)); // 蛇の頭を画面の中心座標に追加
 
       // 餌の初期化
       for (var i = 0; i < 10; i++) {
         addFood();
       }
 
-      timer = setInterval('tick()', 200);
+      timer = setInterval('tick()', 200); // 200msecごとにtick()を呼び出し
       window.onkeydown = keydown;
     }
 
@@ -49,19 +50,22 @@
       while (true) {
         var x = Math.floor(Math.random() * W);
         var y = Math.floor(Math.random() * H);
+				// xとyの値を乱数で求める
 
+				// 餌の場所がすでに餌のある場所、蛇の上ではないかの判定
         if (isHit(foods, x, y) || isHit(snake, x, y)) {
-          continue;
+          continue; // 条件にヒットした場合はやり直し
         }
 
+				// ヒットしない場合は、配列foodsに餌を追加して関数を抜ける
         foods.push(new Point(x, y));
         break;
       }
     }
 
     // 衝突判定
-    function isHit(data, x, y) {
-      for (var i = 0; i < data.length; i++) {
+    function isHit(data, x, y) { // isHitは第1引数の配列dataの中に、x,yという座標を含むPointオブジェクトの有無を返す
+      for (var i = 0; i < data.length; i++) { // dataの長さをlengthプロパティで取得してその回数分for文を実行
         if (data[i].x == x && data[i].y == y) {
           return true;
         }
@@ -69,43 +73,49 @@
       return false;
     }
 
+		// 蛇が餌を食べたときは、その餌を別の場所に移動
     function moveFood(x, y) {
       foods = foods.filter(function (p) {
+				// filterメソッドで、各Pointオブジェクトの要素を引数pとしてコールバック関数を呼び出し
         return (p.x != x || p.y != y);
+				// コールバック関数でtrueを返すと、そのpは戻り値の配列に含まれ、falseを返すとそのpが含まれなくなる
+				// コールバック関数では、xが違う、もしくはyが違うときにtrueを返す。xもyも一致したときにfalseを返す
       });
-      addFood();
+      addFood(); // 削除した分の餌をaddFood()で追加（餌の移動）
     }
 
-    function tick() {
+    function tick() { // メインループ
+			// 蛇の頭の座標をxとyに格納
       var x = snake[0].x;
       var y = snake[0].y;
 
+			// keyCodeに応じて次の頭の位置を求める
       switch (keyCode) {
         case 37: x--; break; // 左
         case 38: y--; break; // 上
         case 39: x++; break; // 右
         case 40: y++; break; // 下
-        default: paint(); return;
+        default: paint(); return; // xとyは次に来る蛇の頭の位置を格納
       }
 
       // 自分 or 壁に衝突？
       if (isHit(snake, x, y) || x < 0 || x >= W || y < 0 || y >= H) {
-        clearInterval(timer);
+        clearInterval(timer); // ぶつかっている場合はタイマーを止めてゲーム終了
         paint();
         return;
       }
 
       // 頭を先頭に追加
-      snake.unshift(new Point(x, y));
+      snake.unshift(new Point(x, y)); // unshiftメソッドを使って先頭に新しいPoint(x,y)オブジェクトを追加
 
       if (isHit(foods, x, y)) {
-        point += 10; // 餌を食べた
-        moveFood(x, y);
+        point += 10; // 餌を食べた → pointを増やす
+        moveFood(x, y); // その位置の餌を別の場所に移動
       } else {
-        snake.pop(); // 食べてない→しっぽを削除
+        snake.pop(); // 食べてない → しっぽを削除
       }
 
-      paint();
+      paint(); // 画面を再描画
     }
 
     function paint() {
