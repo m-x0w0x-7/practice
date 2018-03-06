@@ -24,23 +24,26 @@
     var W = 10, H = 10, BOMB = 10, cell = [], opened = 0;
 
     function init() {
+			// #mainを持つtable要素への参照を取得
       var main = document.getElementById('main');
 
+			// tr要素とtd要素をcreateElementで動的に作成（行と列を作成）
       for (var i = 0; i < H; i++) {
         cell[i] = [];
         var tr = document.createElement('tr');
         for (var j = 0; j < W; j++) {
           var td = document.createElement('td');
-          td.addEventListener('click', click);
-          td.className = 'cell';
-          td.y = i;
-          td.x = j;
+          td.addEventListener('click', click); // クリック時にclickを実行するようハンドラーを登録
+          td.className = 'cell'; // td.cell {width...というスタイルを適用するようclass属性を指定
+          td.y = i; // どこがクリックされたか判定用にyというプロパティを追加
+          td.x = j; // どこがクリックされたか判定用にxというプロパティを追加
           cell[i][j] = td;
           tr.appendChild(td);
         }
         main.appendChild(tr);
       }
 
+			// cellに爆弾を配置（同じ場所に爆弾を配置しないようにしている）
       for (var i = 0; i < BOMB; i++) {
         while (true) {
           var x = Math.floor(Math.random() * W);
@@ -54,11 +57,11 @@
       }
     }
 
-    function count(x, y) {
+    function count(x, y) { // その座標の周囲にいくつの爆弾があるか、その個数を返す関数
       var b = 0;
       for (var j = y - 1; j <= y + 1; j++) {
         for (var i = x - 1; i <= x + 1; i++) {
-          if (cell[j] && cell[j][i]) {
+          if (cell[j] && cell[j][i]) { // iとjがマス目の外になった場合に爆弾を数えないようにするための処理
             if (cell[j][i].bomb) b++;
           }
         }
@@ -66,20 +69,20 @@
       return b;
     }
 
-    function open(x, y) {
+    function open(x, y) { // x,yの場所のマスを開く処理
       for (var j = y - 1; j <= y + 1; j++) {
         for (var i = x - 1; i <= x + 1; i++) {
           if (cell[j] && cell[j][i]) {
             var c = cell[j][i];
-            if (c.opened || c.bomb) {
+            if (c.opened || c.bomb) { // すでに開かれている場合、もしくは爆弾があるセルだった場合は何もせずに処理を継続
               continue;
             }
-            flip(c);
-            var n = count(i, j);
-            if (n == 0) {
+            flip(c); // それ以外の場合はflip関数でそのマスを開く
+            var n = count(i, j); // その座標の周囲にある爆弾の数を調べる
+            if (n == 0) { // その数が0の場合はその座標を中心に同じopen関数を呼び出す
               open(i, j);
             } else {
-              c.textContent = n;
+              c.textContent = n; // 0以外の場合はその数値を表示（爆弾のない範囲をオープン）
             }
           }
         }
@@ -87,16 +90,17 @@
     }
 
     function flip(cell) {
-      cell.className = 'cell open';
+      cell.className = 'cell open'; // className属性に'cell open'を代入することで「td.cell {...}」と「td.open {...}」の両方のスタイルを適用
       cell.opened = true;
       if (++opened >= (W * H - BOMB)) {
-        document.getElementById('title').textContent = 'Good Job!';
+        document.getElementById('title').textContent = 'Good Job!'; // 開いた数が爆弾を除いた数に到達したとき（＝すべてのマスをオープンできたとき）に「Good Job!」と表示
       }
     }
 
-    function click(e) {
+    function click(e) { // init()で各セルに登録していたイベントハンドラー
       var src = e.currentTarget;
-      if (src.bomb) {
+      if (src.bomb) { // その位置に爆弾があった場合（src.bombが真の場合）
+				// すべてのセルをチェックして、そこに爆弾がある場合に「＋」を表示
         cell.forEach(function (tr) {
           tr.forEach(function (td) {
             if (td.bomb) {
@@ -104,9 +108,9 @@
             }
           })
         });
-        document.getElementById('title').textContent = 'Game Over';
+        document.getElementById('title').textContent = 'Game Over'; // タイトルを「Game Over」に変更
       } else {
-        open(src.x, src.y);
+        open(src.x, src.y); // それ以外の場合はその座標のx,y座標を引数としてopen()を呼び出す
       }
     }
   </script>
