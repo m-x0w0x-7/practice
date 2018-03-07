@@ -4,7 +4,7 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="X-UA-Compatible" content="ie=edge">
-	<title>game06</title>
+	<title>game05</title>
 </head>
 <body onload="init();">
 	<canvas id="canvas" width="600" height="600">
@@ -17,9 +17,11 @@
 		function Beam() {
 			this.x = 0;
 			this.y = -100;
+			// 元画像のどこから描画するか
 			this.offset = 0;
 			this.even = false;
-			this.isEven = function() { return this.even; }
+			// 画像を切り替えるか否か
+			this.isEven = function() { return this.even; } // オブジェクトごとに描画を切り替え
 		}
 
 		function Bomb() {
@@ -27,7 +29,7 @@
 			this.y = 600;
 			this.offset = 48;
 			this.even = false;
-			this.time = rand(200) + 50;
+			this.time = rand(200) + 50; // いつ爆弾を落とし始めるか
 			this.isEven = function() { return this.even; }
 		}
 
@@ -36,19 +38,21 @@
 			this.y = y;
 			this.point = point;
 			this.offset = offset;
-			this.isEven = function() { return Alien.isEven; }
+			this.isEven = function() { return Alien.isEven; } // すべてのエイリアンを同時に切り替え
 		}
 
 		function Ship() {
 			this.x = 0;
 			this.y = 550;
 			this.offset = 192;
-			this.moveL = false;
+			this.moveL = false; // 押下状態を保持
 			this.moveR = false;
-			this.isEven = function() { return true; }
+			this.isEven = function() { return true; } // 画像を切り替えないので常に同じ値を返す
 		}
 
+		// bitmapというオブジェクトをprototypeとして参照
 		var bitmap = {
+			// drawメソッドでそれぞれの画像を描画
 			draw: function( ctx ) {
 				if ( !this.strip ) {
 					this.strip = document.getElementById('strip');
@@ -59,79 +63,95 @@
 
 		Ship.prototype = Beam.prototype = Alien.prototype = Bomb.prototype = bitmap;
 
+		// Alienは画像の切り替え、左右への移動、下へ降りる、動くスピードも同時なのでAlienオブジェクトのプロパティとして管理
 		Alien.isEven = false;
 		Alien.isDown = false;
 		Alien.isLeft = false;
 		Alien.interval = 1000;
 
-		function rand( max ) {
+		function rand( max ) { // 0からmaxまでの整数を返す関数
 			return Math.floor( Math.random() * max);
 		}
 
-		function init() {
-			ctx = document.getElementById('canvas').getContext('2d');
+		function init() { // 初期化時に呼ばれる関数
+			ctx = document.getElementById('canvas').getContext('2d'); // コンテキストを取得してctxに格納
 			ctx.font = '20pt Arial';
-			score = 0, stage = 1;
+			score = 0, stage = 1; // スコアとステージを初期化
 
+			// keydownとkeyupのイベントハンドラーを登録
 			addEventListener( 'keydown', keyDown, true );
 			addEventListener( 'keyup', keyUp, true);
 
+			// start()関数を呼び出し
 			start();
 		}
 
+		// 各ステージを開始する処理
 		function start() {
-			ship = new Ship();
-			beam = new Beam();
-			clock = 0;
-			Alien.interval = 1000 - stage * 50;
+			ship = new Ship(); // shipを初期化
+			beam = new Beam(); // beamを初期化
+			clock = 0; // タイマーを初期化
+			Alien.interval = 1000 - stage * 50; // Alienを動かすタイマーをステージが進むごとに速くなるように初期化
 
+			// Alienオブジェクトを作成
 			for ( var i = 0; i < 4; i++ ) {
 				var offset = ( i < 2 ) ? 96 : 144;
 				for ( var j = 0; j < 10; j++ ) {
-					aliens.push( new Alien( 100 + j*50, i*50 + 50*stage, ( 4 - i ) * 10, offset) );
+					// Alienのコンストラクタの引数は、x座標、y座標、撃ち落としたときの得点、画像のオフセット
+					// ステージが進むごとに難しくなるようy座標を増やす
+					aliens.push( new Alien( 100 + j*50, i*50 + 50*stage, ( 4 - i ) * 10, offset) ); // 配列aliensに格納
 				}
+				// Bombオブジェクトを4つ、bombs配列に格納
 				bombs.push( new Bomb() );
 			}
 
+			// Alien用のタイマーを開始
 			if ( isNaN( alienT ) ) {
-				alienT = setTimeout( alienLoop, Alien.interval );
+				alienT = setTimeout( alienLoop, Alien.interval ); // 徐々にスピードをあげるためsetTimeoutを使用
 			}
+
+			// メインループ用のタイマーを開始
 			if ( isNaN( mainT ) ) {
-				mainT = setInterval( mainLoop, 50 );
+				mainT = setInterval( mainLoop, 50 ); // 一定間隔でよいのでsetIntervalを使用
 			}
 		}
 
+		// キー入力処理
 		function keyDown( evt ) {
-			if ( evt.keyCode == 37 ) ship.moveL = true;
-			if ( evt.keyCode == 39 ) ship.moveR = true;
-			if ( evt.keyCode == 32 && beam.y < 0 ) {
+			if ( evt.keyCode == 37 ) ship.moveL = true; // 左キーが押されたときにship.moveLをtrueに
+			if ( evt.keyCode == 39 ) ship.moveR = true; // 右キーが押されたときにship.moveRをtrueに
+			if ( evt.keyCode == 32 && beam.y < 0 ) { // スペースキーが押された時にbeamのy座標が0未満（画面の外にあるとき）はビーム発射OK
+				// beamのx,y座標を初期化
 				beam.y = 520;
 				beam.x = ship.x;
 			}
 		}
-
 		function keyUp( evt ) {
 			if ( evt.keyCode == 37 ) ship.moveL = false;
 			if ( evt.keyCode == 39 ) ship.moveR = false;
 		}
 
 		function alienLoop() {
-			var minX = Infinity, maxX = 0, maxY = 0;
+			var minX = Infinity, maxX = 0, maxY = 0; // minX, maxX, maxYでAlienオブジェクト全体の座標を管理
 
+			// false → true、true → false...と都度値を切り替える
 			Alien.isEven = !Alien.isEven;
 
-			// update aliens' position
+			// update aliens' position　すべてのAlienを動かす
 			aliens.forEach( function(e) {
-				e.x += Alien.isDown ? 0 : ( Alien.isLeft ? -10 : 10 );
-				e.y += Alien.isDown ? 20 : 0;
+				e.x += Alien.isDown ? 0 : ( Alien.isLeft ? -10 : 10 ); // isDownが真のときx方向は変化せず、y方向に20移動
+				e.y += Alien.isDown ? 20 : 0; // isDownが偽のときはx方向はisLeftの値に応じて-10か10、y方向は変化なし
 			});
 
+			// minXとmaxX、maxYを求める
 			aliens.forEach ( function(e) {
 				minX = Math.min( minX, e.x );
 				maxX = Math.max( maxX, e.x );
 				maxY = Math.max( maxY, e.y );
 			});
 
+			// Alienが下向きに動いたときは次回は左右のどちらかへ
+			// Alienの軍団が左端に到達したとき（minX < 20）は右に向きを変えて一段下がり、右端に到達したとき（maxX > 560）は左に向きを変えて一段下がる
 			if ( Alien.isDown ) {
 				Alien.isDown = false;
 			} else if ( minX < 20 ) {
@@ -142,14 +162,17 @@
 				Alien.isLeft = true;
 			}
 
+			// Alienが下まで到達する（maxY > 550）とゲームオーバーなのでgameOver()を呼び出す
 			if ( maxY > 550 ) {
 				gameOver();
 			} else {
+				// そうでない場合は、時間を5ミリ秒短くしてsetTimeoutを呼び出し、呼び出し間隔が50ミリ秒より小さくならないようにMath.maxを使用
 				Alien.interval = Math.max( 50, Alien.interval - 5 );
 				setTimeout( alienLoop, Alien.interval );
 			}
 		}
 
+		// ゲームオーバー時の処理を行う（タイマーを止めて再描画）
 		function gameOver() {
 			clearInterval( mainT );
 			mainT = NaN;
@@ -161,7 +184,7 @@
 		function mainLoop() {
 			clock++;
 
-			if ( aliens.length == 0 ) {
+			if ( aliens.length == 0 ) { // aliensの残りが0になったらステージクリア
 				if ( clock > 100 ) {
 					stage++;
 					start();
@@ -172,20 +195,23 @@
 			// update beam and check if it hits an alien
 			var hit = -1;
 			if ( beam.y > -30 ) {
+				// ビームが画面の中にいる場合（beam.y > -30）、すなわち発射の場合、そのy座標を15減らし、画像を「beam.even = !beam.even;」で切り替え
 				beam.y -= 15;
 				beam.even = !beam.even;
+				// 個々のAlienとビームの座標値を比較し、当たっているか判定
 				aliens.forEach( function( e, i ) {
 					if ( e.x - 15 < beam.x && beam.x < e.x + 15 && e.y - 10 < beam.y && beam.y < e.y + 20 ) {
-						hit = i;
-						beam.y = -100;
-						score += e.point;
+						// もし当たっていた場合
+						hit = i; // そのインデックスをhitにいったん保存
+						beam.y = -100; // ビームのy座標を画面の外に設定
+						score += e.point; // Alienのpointをスコアに加算
 						return;
 					}
 				});
 			}
 
-			if ( hit >= 0 ) {
-				aliens.splice( hit, 1);
+			if ( hit >= 0 ) { // 当たっていると判定された場合
+				aliens.splice( hit, 1); // そのオブジェクトを配列から削除
 
 				// stage clear
 				if ( aliens.length == 0 ) {
@@ -196,23 +222,24 @@
 			}
 
 			// update bombs and check if it hits the ship
-			bombs.forEach( function(b) {
-				if ( b.time < clock ) {
-					var a = aliens[ rand( aliens.length ) ];
-					b.x = a.x, b.y = a.y + 30;
-					b.time += rand( 200 ) + 50;
-				} else if ( b.y < 600 ) {
-					b.y += 10;
+			bombs.forEach( function(b) { // 個々のBombオブジェックトを取り出す
+				if ( b.time < clock ) { // その発射時間と現在時刻を比較
+					var a = aliens[ rand( aliens.length ) ]; // どのAlienから発射されたものかを乱数で求める
+					b.x = a.x, b.y = a.y + 30; // そのAlienオブジェクトの座標でBombのxとy座標を初期化
+					b.time += rand( 200 ) + 50; // 次に発射する時刻を乱数で求め、timeにセット
 				}
-				b.even = !b.even;
-				if ( b.x - 15 < ship.x && ship.x < b.x + 15 && 530 < b.y && b.y < 550 ) {
+				else if ( b.y < 600 ) { // Bombが画面中にある場合
+					b.y += 10; // そのy座標に10加算
+				}
+				b.even = !b.even; // 画像を切り替え
+				if ( b.x - 15 < ship.x && ship.x < b.x + 15 && 530 < b.y && b.y < 550 ) { // 母船と衝突しているか判定して、衝突している場合はgameOver()を呼び出し
 					gameOver();
 				}
 			});
 
-			// move the ship
+			// move the ship　左右キーの押下状態に応じて母船のx座標を更新
 			if ( ship.moveR ) {
-				ship.x = Math.min( ship.x + 5, 570);
+				ship.x = Math.min( ship.x + 5, 570); // 画面をはみ出さないように、Math.minとMath.maxを利用
 			}
 			if ( ship.moveL ) {
 				ship.x = Math.max( ship.x - 5, 0);
@@ -246,11 +273,11 @@
 			ctx.fillStyle = 'rgb( 0, 255, 0 )';
 			ctx.fillText( ( '0000000' + score ).slice( -7 ), 470, 30 );
 
-			if ( aliens.length == 0 ) {
+			if ( aliens.length == 0 ) { // エイリアンが0のとき
 				ctx.fillText( 'STAGE CLEAR', 200, 150 );
 			}
 
-			if ( isNaN( mainT ) ) {
+			if ( isNaN( mainT ) ) { // タイマーが止まっているとき
 				ctx.fillText( 'GAME OVER', 220, 150 );
 			}
 		}
