@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>game06</title>
+</head>
+<body onload="init();">
+	<canvas id="canvas" width="800" height="600">
+	<img src="img/strip02.png" style="display:none;" alt="" id="strip">
+	<img src="img/scope.png" style="display:none;" alt="" id="scope">
+	<!-- <audio src="bomb.mp3" id="explode"></audio> -->
+
+	<script>
+		'use strict';
+		var houses = [], missiles = [], shoot, timer = NaN, count = 0, score = 0, ctx;
+
+		// 家の状態を管理するオブジェクト
+		function House(x) {
+			this.x = x; //x座標
+			this.y = 550; // y座標
+			this.w = 40; // 幅
+			this.hit = false; // ミサイルで破壊されたか否か
+		}
+
+		// ミサイルを表すオブジェクト
+		function Missle() {
+			this.maxCount = 500; // ミサイルが落ちてきてから地上に墜落するまでにかかる時間（mainLoopが実行される回数）
+			this.interval = 1000; // 一度地上に落下したミサイルが次にどのくらいのタイミングでサイド落ちてくるかを調整
+
+			this.reload = function() {
+				this.sX = rand( 800 ); // 落下開始場所の座標（乱数）
+				this.eX = rand( 800 ); // 落下地点の座標（乱数）
+				this.interval = this.interval * 0.9;
+				this.firetime = rand( this.interval ) + count; // 次に発射する時刻を求める
+				this.x = 0; // 現在のミサイルのx座標
+				this.y = 0; // 現在のミサイルのy座標
+				this.r = 0; // 爆発時の半径
+			};
+
+			// ミサイルの軌跡と爆発時にはその円を描画
+			this.draw = function( ctx ) {
+				ctx.strokeStyle = ctx.fillStyle = 'rgb( 0, 255, 255 )';
+
+				// 軌跡の描画
+				line( ctx, this.sX, 0, this.x, this.y );
+
+				// 爆発
+				if ( this.r > 0 ) {
+					circle( ctx, this.x, this.y, this.r < 50 ? this.r : ( 100 - this.r ) );
+				}
+			};
+
+			// オブジェクト作成時（new Missle()と呼ばれたとき）
+			this.reload(); // 自分のメソッドを呼び出すことでミサイルの初期化を行う
+		}
+
+		// 自分の発射したミサイルを管理するオブジェクト
+		function Shoot() {
+			this.scopeX = 400; // 自分の照準器のx座標を保持するプロパティ
+			this.scopeY = 300; // 自分の照準器のy座標を保持するプロパティ
+			this.scopeW = 50; // 自分の照準器の幅を保持するプロパティ
+			this.image = document.getElementById('scope'); // 照準器の画像
+			this.count = 0; // 自分のミサイルが発射されてからの経過時間（グローバル変数のcountとは別の値であることに注意）
+			this.shotX = 0; // 自分が発射したミサイルの標的となるx座標
+			this.shotY = 0; // 自分が発射したミサイルの標的となるy座標
+			this.shotR = 0; // 爆発時の半径
+			this.fire = false; // ミサイル発射中か否かを保持するフラグ
+			this.draw = function( ctx ) {
+				ctx.strokeStyle = ctx.fillStyle = 'rgb(0, 255, 0)';
+
+				// 照準器の描画
+				ctx.drawImage(this.image, this.scopeX - this.scopeW / 2, this.scopeY - this.scopeW / 2);
+
+				// 発射中でなければメソッドから抜ける
+				if ( !this.fire ) return;
+
+				// ミサイルの軌跡を描画中と爆発中で分ける
+				if ( this.shotR == 0 && this.count < 100 ) { // 爆発中半径が0で発射してから100カウント以内のとき
+					// 軌跡の描画（ミサイルが迎撃中）
+					var ratio = this.count / 100;
+					var y = 600 - ( 600 - this.shotY ) * ratio;
+
+					// 左側レーザー
+					line( ctx, 0, 600, (this.shotX * ratio ), y );
+					// 右側レーザー
+					line( ctx, 800, 600, ( 800 - ( 800 - this.shotX ) * ratio ), y );
+				} else if ( this.shotR > 0 ) {
+					// 爆発
+					circle( ctx, this.shotX, this.shotY, this.shotR );
+				}
+			}
+		}
+
+		// 0〜rまでの乱数を返す
+		function rand(r) {
+			return Math.floor( Math.random() * r )
+		}
+
+		// (x0, y0)から(x1, y1)への線を描画
+		function line( ctx, x0, y0, x1, y1 ) {
+			ctx.beginPath();
+			ctx.moveTo( x0, y0 );
+			ctx.lineTo( x1, y1 );
+			ctx.closePath();
+			ctx.stroke();
+		}
+
+		// (x,y)を中心座標とする半径rの円を描画
+		function circle( ctx, x, y, r ) {
+			if ( r <= 0 ) return;
+			ctx.beginPath();
+			ctx.arc( x, y, r, 0, Math.PI * 2, true );
+			ctx.fill();
+		}
+
+		function init() {
+			shoot = new Shoot();
+
+			var canvas = document.getElementById( 'canvas' );
+			ctx = canvas.getContext( '2d' );
+			ctx.font = '20pt Arial';
+
+			canvas.addEventListener( 'mousemove', mousemove );
+			canvas.addEventListener( 'mousedown', mousedown );
+
+			start();
+		}
+
+		// ゲームの初期化を行う
+		function start() {
+			score = 0;
+
+			houses = [];
+			for ( var i = 0; i < 13; i++ ) {
+				houses.push( new House( i * 60 + 20));
+			}
+
+			missiles = [];
+
+			for ( var i = 0; i < 8; i++ ) {
+				missiles.push( new Missle() );
+			}
+
+			timer = setInterval( mainLoop, 20 );
+		}
+
+		function mainLoop() {
+			count++; // ゲームの世界の時計を1つ進める
+
+			// 自分のミサイル発射時、その状態を更新
+			if ( shoot.fire ) {
+				shoot.count++;
+
+				if ( 100 <= shoot.count && shoot.count < 200 ) { // 発射してから100以上200未満のとき
+					shoot.shotR++; // 爆発半径を増加
+				} else if ( 200 <= shoot.count && shoot.count < 300 ) { // 発射してから200以上300未満のとき
+					shoot.shotR--; // 爆発半径を減少
+				} else if ( 300 <= shoot.count ) { // 発射してから300以上のとき
+					shoot.fire = false; // 発射状態を解除
+				}
+			}
+
+			// ミサイルの状態を更新
+			missiles.forEach( function(m) {
+				var c = count - m.firetime; // 現在時刻とミサイル発射時刻の差を求める
+				if ( c < 0 ) { // ミサイル発射前
+					return; // コールバック関数を抜ける
+				}
+				if ( m.r > 0 ) { // 爆発
+					if ( m.r++ > 100 ) { // 半径を増やす、100を超えたら爆発終了
+						m.reload() // 次の発射時刻を設定
+					}
+				} else {
+					// ミサイルの場所更新
+					// maxCount = 落下開始から着地するまでの時間、c = 発射から経過時間、sX = 落下開始場所、eX = 着地場所
+					m.x = ( m.eX - m.sX ) * c / m.maxCount + m.sX;
+					m.y = 600 * c / m.maxCount;
+
+					// 自分の迎撃ミサイルとの衝突判定
+					var dx = Math.pow( shoot.shotX - m.x, 2 ); // Math.pow = べき乗を計算（第1引数を第2引数回掛け算）
+					var dy = Math.pow( shoot.shotY - m.y, 2 );
+					if ( ( dx + dy ) < Math.pow( shoot.shotR, 2 ) ) {
+						m.r = 1;
+						score += 100;
+						// explodeSound();
+						return;
+					}
+
+					// 地面に衝突時
+					if ( c > m.maxCount ) { // 敵ミサイル落下からの時間がmaxCountを超えたとき
+
+						// 家に衝突したか判定
+						houses.forEach( function( house ) {
+							if ( ( house.x + house.w < m.x - 50 ) || ( m.x + 50 < house.x ) ) {
+							} else {
+								house.hit = true; // 衝突している場合はHouseオブジェクトのhitプロパティをtrueに設定
+							}
+						});
+
+						// houses.every()はすべてのコールバックでtrueを返した場合のみ真を返す（全部のHouseオブジェクトのhitプロパティがtrueの場合に真を返す）
+						if ( houses.every( function ( house ) {
+							return house.hit
+						})) {
+							clearInterval( timer ); // trueの場合はタイマーを停止
+							timer = NaN;
+						}
+						// explodeSound();
+						m.r = 1; // 敵ミサイルの爆発半径を1に設定
+					}
+				}
+			});
+
+			draw();
+		}
+
+		// 現在のマウスの位置に照準器を移動
+		function mousemove(e) {
+			shoot.scopeX = e.clientX;
+			shoot.scopeY = e.clientY;
+		}
+
+		// マウス押下時の処理を行う
+		function mousedown(e) {
+			if ( shoot.fire == false ) { // 現在発射中でない場合、自分のShootオブジェクトを現在のマウスの位置で初期化し、fireプロパティをtrueに設定
+				shoot.shotX = e.clientX;
+				shoot.shotY = e.clientY;
+				shoot.shotR = 0;
+				shoot.count = 0;
+				shoot.fire = true;
+			}
+		}
+
+		function draw() {
+			// 背景を塗りつぶし
+			ctx.fillStyle = 'rgb( 0, 0, 0 )';
+			ctx.fillRect( 0, 0, 800, 600 );
+
+			// 家の描画
+			houses.forEach( function(h) {
+				ctx.drawImage( strip, ( h.hit ? 20 : 0 ), 0, 20, 20, h.x, h.y, h.w, h.w);
+			});
+
+			// 自分のミサイルの描画
+			shoot.draw( ctx );
+
+			// 敵のミサイルの描画
+			missiles.forEach( function(m) {
+				if ( m.x != 0 && m.y != 0 ) {
+					m.draw( ctx );
+				}
+			})
+
+			// スコアの描画
+			ctx.fillStyle = 'rgb( 0, 255, 0 )';
+			ctx.fillText( ( '00000' + score ).slice( -5 ), 570, 30 );
+
+			if ( isNaN( timer ) ) {
+				ctx.fillText( 'GAME OVER', 320, 150 );
+			}
+		}
+	</script>
+</body>
+</html>
