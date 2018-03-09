@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>game07</title>
+</head>
+<body onload="init()">
+  <div>
+    <canvas id="canvas" width= "800" height="800"></canvas>
+  </div>
+  <img src="img/ship.png" alt="" id="ship" style="display:none;">
+  <img src="img/bg.png" alt="" id="bg" style="display:none;">
+  <img src="img/rock.png" alt="" id="rock" style="display:none;">
+  <img src="img/bang.png" alt="" id="bang" style="display:none;">
+
+  <script>
+    'use strict';
+    var ctx, ship, shots = [], rocks = [], level = 1, score = 0, clock = 0, timer = NaN, bg, bgX = 0, bgY = 0;
+
+    function Rock( x, y, s ) {
+      this.cx = x; // 中心座標
+      this.cy = y; // 中心座標
+      this.w = s; // 幅
+      this.h = s; // 高さ
+      var a = Math.random() * Math.PI * 2; // 進行方向
+      this.dx = Math.floor( Math.cos(a) * ( 128 / s ) ); // 移動量
+      this.dy = Math.floor( Math.sin(a) * ( 128 / s ) ); // 移動量
+      this.image = document.getElementById( 'rock' );  // 画像への参照
+    }
+
+    function Shot() {
+      this.cx = 0;
+      this.cy = 0;
+      this.w = 6;
+      this.h = 6;
+      this.dx = 0;
+      this.dy = 0;
+      this.count = this.maxCount; // count = 現在の距離
+      this.power = 10; // 弾丸のスピード
+      this.maxCount = 40; // 消滅する最大距離
+    }
+
+    function Ship() {
+      this.cx = 400;
+      this.cy = 400;
+      this.w = 90;
+      this.h = 60;
+      this.dx = 0;
+      this.dy = 0;
+      this.rotate = 0; // 進行方向
+      this.power = 0; // スピード
+      this.accel = 0; // 加速度
+
+      this.keyL = false; // 左
+      this.keyR = false; // 右
+      this.keyF = false; // 上（前）
+      this.keyB = false; // 下（後）
+
+      this.image = document.getElementById( 'ship' );
+    }
+
+    Shot.prototype = Ship.prototype = Rock.prototype = {
+      getX: function() {
+        return this.cx - this.w / 2;
+      },
+      getY: function() {
+        return this.cy - this.h / 2;
+      },
+      isHit: function(o) {
+        return !(
+          ( ( o.getX() + o.w ) < this.getX() ) || ( ( this.getX() + this.w ) < o.getX() ) || ( ( o.getY() + o.h ) < this.getY() ) || ( ( this.getY() + this.h ) < o.getY() )
+          );
+      },
+      update: function() {
+        this.cx = ( this.cx + this.dx + 800 ) % 800;
+        this.cy = ( this.cy + this.dy + 800 ) % 800;
+      }
+    }
+
+    function rand(r) { // 0〜rまでの整数の乱数を返す
+      return Math.floor( Math.random() * r )
+    }
+
+    function init() {
+      ctx = document.getElementById( 'canvas' ).getContext( '2d' ); // canvasのコンテキストを取得
+      ctx.font = '20pt Arial';
+      bg = document.getElementById( 'bg' );
+
+			// 自機Shipを初期化
+      ship = new Ship();
+
+      // 爆弾の初期化
+			// 弾丸Shot7個のオブジェクトを作成、配列shotsに格納
+      for ( var i = 0; i < 7; i++ ) {
+        shots.push( new Shot() );
+      }
+
+      // キーイベントハンドラーの初期化
+      window.addEventListener( 'keydown', function(e) {
+        switch ( e.keyCode ) {
+          case 37: ship.keyL = true; break;
+          case 38: ship.keyF = true; break;
+          case 39: ship.keyR = true; break;
+          case 40: ship.keyB = true; break;
+          case 32: ship.keyH = true; break;
+        }
+      });
+      window.addEventListener( 'keyup', function(e) {
+        switch ( e.keyCode ) {
+          case 37: ship.keyL = false; break;
+          case 38: ship.keyF = false; break;
+          case 39: ship.keyR = false; break;
+          case 40: ship.keyB = false; break;
+          case 32: ship.keyH = false; break;
+        }
+      });
+
+      start();
+
+      if ( isNaN( timer ) ) {
+        timer = setInterval( mainLoop, 50 ); // mainLoopを開始
+      }
+    }
+
+    function start() { // init()から、もしくはステージクリア後に呼び出される
+      rocks = [];
+
+      // 岩の初期化
+			// 岩オブジェクトRockをステージ数levelにあわせて生成し、配列rocksに格納
+      for ( var i = 0; i < level; i++ ) {
+        var x = rand( 800 ), y = rand( 800 );
+        while ( true ) {
+          var r = new Rock( x, y, 64 );
+          if ( !r.isHit( ship ) ) {
+            rocks.push(r);
+            break;
+          }
+        }
+      }
+    }
+
+    function mainLoop() {
+      clock++; // 都度、clockの値をインクリメント（1増やす）
+
+      if ( rocks.length == 0 ) { // 岩が全部なくなったら
+        if ( clock > 100 ) { // しばらくの間停止
+          level++; // levelを1増加
+          start(); // start()を呼び出す
+        }
+        return;
+      }
+
+      // 船の場所・向きを更新
+			// 向きを変化
+      if ( ship.keyL ) { ship.rotate -= 0.1; }
+      if ( ship.keyR ) { ship.rotate += 0.1; }
+			// 加速度を増減、加速度の範囲は-5から＋5
+      if ( ship.keyF ) { ship.accel = Math.min( +5, ship.accel + 0.2 ); }
+      if ( ship.keyB ) { ship.accel = Math.max( -5, ship.accel - 0.1 ); }
+
+      ship.power += ship.accel;
+			// shipにブレーキをかける。何も操作しないとpowerとaccelが徐々に低減
+      ship.power *= 0.94;
+      ship.accel *= 0.94;
+			// dxとdyを更新
+      ship.dx = Math.cos( ship.rotate ) * ship.power;
+      ship.dy = Math.sin( ship.rotate ) * ship.power;
+			// updateでshipの1を更新
+      ship.update();
+
+			// shipの移動量に合わせて、背景画像の描画開始場所、bgXとbgYを更新
+      bgX = ( bgX + ship.dx / 2 + 1600 ) % 800;
+      bgY = ( bgY + ship.dy / 2 + 1600 ) % 800;
+
+      // 弾丸の位置を更新
+      var fire = false; // 弾丸を発射したかどうか判定するフラグ（一度にすべての弾丸を発射してしまうのを避けるために使用）
+      shots.forEach( function( shot ) { // shotsに格納された弾丸オブジェクトをforEachで順番に取り出す
+        if ( shot.count < shot.maxCount ) { // 現在弾丸が発射中であるか判断
+					// 発射中の場合
+          shot.count++; // カウントを増やす
+          shot.update(); // 場所を更新
+
+          // 衝突検出
+          var hit = -1, r = NaN;
+          rocks.forEach( function( rock, i ) { // rocksに格納された岩オブジェクトをforEachで順番に取り出す
+            if ( rock.isHit( shot ) ) { // isHitで弾丸shotと衝突しているか判定
+							// 衝突していた場合
+              hit = i; // 岩のインデックスをhitに格納
+              r = rock; // 岩オブジェクトをrに格納
+            }
+          });
+
+          // 弾丸が岩に衝突
+          if ( hit >= 0 ) {
+            rocks.splice( hit, 1 ); // spliceを使って、その岩を配列rocksから削除
+
+            score += ( 64 / r.w ) * 10; // スコアを更新
+            shot.count = shot.maxCount; // 弾丸のcountをmaxCountにして発射状態でなくす
+
+            r.w /= 2; // 岩の大きさを半分に
+            if ( r.w >= 16 ) { // その大きさが16よりも大きければ
+              for ( var i = 0; i < 2; i++ ) { // 1つの岩を2つの小さな岩にする
+                rocks.push( new Rock( r.cx, r.cy, r.w ) );
+              }
+            }
+
+            // ステージクリア
+            if ( rocks.length == 0 ) { // 残りの岩が0になれば
+              clock = 0;
+              draw();
+            }
+          }
+        }
+        else if ( !fire && ship.keyH ) { // 発射された弾丸がなく、スペースキーが押下されていたら、その弾丸を発射状態にする
+          shot.count = 0;
+					// 座標と向きはshipと同じ値を使用（shipが向いている方向に弾丸が発射される）
+          shot.cx = ship.cx;
+          shot.cy = ship.cy;
+          shot.r = ship.rotate;
+          shot.dx = ship.dx + shot.power * Math.cos( shot.r );
+          shot.dy = ship.dy + shot.power * Math.sin( shot.r );
+          fire = true;
+        }
+      });
+
+      // 岩の場所を更新
+      rocks.forEach( function( rock ) {
+        rock.update();
+
+        if ( ship.isHit( rock ) ) { // shipと衝突しているか否か判定、衝突している場合は
+          clearInterval( timer ); // タイマーを停止
+          timer = NaN;
+        }
+      });
+
+      draw();
+    }
+
+    function draw() {
+      // 背景を描画
+      ctx.drawImage( bg, bgX, bgY, 400, 400, 0, 0, 800, 800 );
+
+      // 弾丸の描画
+      ctx.fillStyle = 'rgb( 0, 255, 255)';
+      shots.forEach( function( shot ) {
+        if ( shot.count < shot.maxCount ) {
+          ctx.fillRect( shot.getX(), shot.getY(), shot.w, shot.h);
+        }
+      });
+
+      // 岩の描画
+      rocks.forEach( function( rock ) {
+        ctx.drawImage( rock.image, rock.getX(), rock.getY(), rock.w, rock.h);
+      });
+
+      // 船の描画
+      ctx.save();
+      ctx.translate( ship.cx, ship.cy ); // 中心座標をshipの中心に移動
+      ctx.rotate( ship.rotate ); // 自機の向きに合わせて座標系を回転
+      ctx.drawImage( ship.image, -ship.w /2, -ship.h / 2 ); // 描画（回転した船が描画される）
+      ctx.restore();
+
+      // スコアの描画
+      ctx.fillStyle = 'rgb( 0, 255, 0 )';
+      ctx.fillText( ( '0000000' + score ).slice( -7 ), 670, 30 );
+
+      if ( rocks.length == 0 ) {
+        ctx.fillText( 'STAGE CLEAR', 300, 150 );
+      }
+
+			if ( isNaN( timer ) ) {
+				ctx.fillText( 'GAME OVER', 320, 150 );
+				ctx.drawImage( bang, ship.getX() - 50, ship.getY() - 50, 200, 200 );
+			}
+    }
+  </script>
+</body>
+</html>
