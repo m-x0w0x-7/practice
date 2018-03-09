@@ -22,7 +22,7 @@
 			this.width = function() { return this.right - this.left }
 			this.height = function() { return this.bottom - this.top }
 			this.clone = function() { return new Rect( this.left, this.top, this.right, this.bottom ); }
-			this.draw = function( ctx ) {
+			this.draw = function( ctx ) { // 自分自身を描画
 				ctx.fillStyle = 'lightgreen';
 				ctx.fillRect( this.left, this.top, this.width(), this.height() );
 				ctx.strokeStyle = 'green';
@@ -31,21 +31,25 @@
 		}
 
 		function Edge( r, delta ) {
-			this.r = r;
-			this.theta = 0;
-			this.delta = delta;
+			this.r = r; // 半径
+			this.theta = 0; // 現在の角度
+			this.delta = delta; // 回転するスピード
 			this.x = 0;
 			this.y = 0;
 
 			this.update = function() {
+				// 現在の角度thetaをdelta増やし、xとｙ座標を更新
 				this.theta = ( this.theta + this.delta ) % ( Math.PI * 2 );
 				this.x = Math.cos( this.theta ) * this.r;
 				this.y = Math.sin( this.theta ) * this.r;
 			}
 
-			this.isHit = function( cx, cy ) {
-				var dx = this.x / 10, dy = this.y / 10;
-				for ( var x0 = cx - this.x, y0 = cy - this.y, i = 0; i < 20; i++, x0 += dx, y0 += dy ) {
+			// 自機と線が衝突しているかどうか判定
+			this.isHit = function( cx, cy ) { // 敵Enemyの中心座標は引数（cx,cy）で与える
+				var dx = this.x / 10, dy = this.y / 10; // 増分を求める
+				// 座標を保持するx0とy0を初期化し、毎回「x0 += dx」と「y0 += dy」と増やす
+				for ( var x0 = cx - this.x, y0 = cy - this.y, i = 0; i < 20; i++, x0 += dx, y0 += dy ) { // 20回繰り返す
+					// 自機の座標をship.xとship.yで取得
 					if ( ship.x - ship.w / 2 < x0 && x0 < ship.x + ship.y - ship.w / 2 < y0 && y0 < ship.y + ship.w / 2 ) {
 						return true;
 					}
@@ -53,6 +57,7 @@
 				return false;
 			}
 
+			// 赤色の線分を描画
 			this.draw = function( ctx, cx, cy ) {
 				ctx.strokeStyle = 'red';
 				ctx.beginPath();
@@ -63,7 +68,10 @@
 			}
 		}
 
+		// 敵のオブジェクト
 		function Enemy() {
+			// edgesプロパティはEdgeオブジェクトを4つ格納している配列
+			// それぞれのEdgeの引数で、線分の長さと回転速度を指定
 			this.edges = [ new Edge( 20, 0.6 ), new Edge( 40, 0.4 ), new Edge( 60, 0.2 ), new Edge( 100, 0.1 ) ];
 
 			this.prevX = this.x = rand( 600 );
@@ -74,13 +82,17 @@
 			this.limit = rand( 20 ) + 50;
 
 			this.update = function() {
-				if ( ++this.count > this.limit ) {
+				if ( ++this.count > this.limit ) { // 目的地点に到達したら
 					// 次の移動場所の設定
+					// prevXとprevYは前の地点
 					this.prevX = this.nextX;
 					this.prevY = this.nextY;
+					// nextXとnextYは次の目的地点
 					this.nextX = ship.rect.left + rand( ship.rect.width() );
 					this.nextY = ship.rect.top + rand( ship.rect.height() );
+					// 何回で目的地まで移動するか
 					this.limit = rand( 20 ) + 50;
+					// 現在の移動回数を保持
 					this.count = 0;
 				} else {
 					// 徐々に中心位置を移動
@@ -88,11 +100,13 @@
 					this.y = this.prevY + ( this.nextY - this.prevY ) * this.count / this.limit;
 				}
 
+				// 中心座標が決まったらそれぞれの線分の位置を更新
 				this.edges.forEach( function(e) {
 					e.update();
 				});
 			};
 
+			// 衝突判定
 			this.isHit = function() {
 				var that = this;
 				return this.edges.some( function(e) {
@@ -108,12 +122,16 @@
  		}
 
 		function Ship() {
-			this.rect = new Rect( 10, 10, 590, 590 );
+			this.rect = new Rect( 10, 10, 590, 590 ); // 現在自分が移動できる領域を示す矩形
+			// 現在の自機の座標
 			this.x = this.rect.left;
 			this.y = this.rect.top;
+			// 幅と高さ
 			this.w = 20;
+			// 移動量
 			this.dx = 0;
 			this.dy = 0;
+			// 4辺を離れたときの座標を保持
 			this.sx = 0;
 			this.sy = 0;
 			this.image = document.getElementById( 'ship' );
@@ -124,18 +142,21 @@
 			this.keyR = false;
 			this.keyD = false;
 
+			// 自機の状態を更新
 			this.update = function() {
 				this.count++;
 
-				if ( this.dx != 0 || this.dy != 0 ) {
+				if ( this.dx != 0 || this.dy != 0 ) { // 真のときは自機が移動中
 					// 移動中　＝　無防備モード
+					// 現在の座標this.xにthis.dxを加えることで座標を更新
+					// Math.maxとMath.minを組み合わせることで、座標の範囲がrectの中に収まるようにしている
 					this.x = Math.max( this.rect.left, Math.min( this.rect.right, this.x + this.dx ) );
 					this.y = Math.max( this.rect.top, Math.min( this.rect.bottom, this.y + this.dy ) );
 
-					var r = null;
+					var r = null; // 面積の狭いほうをrとする
 					if ( this.x == this.rect.left || this.x == this.rect.right ) {
 						// 水平方向に分割
-						r = this.rect.clone();
+						r = this.rect.clone(); // 広いほうを自分の新しい矩形rectとする
 						if ( ( this.y - this.rect.top ) > ( this.rect.bottom - this.y ) ) {
 							this.rect.bottom = r.top = this.y;
 						} else {
@@ -161,11 +182,12 @@
 				}
 
 				// キー入力処理
-				if ( this.keyR && this.x < this.rect.right ) {
-					if ( this.y == this.rect.top || this.y == this.rect.bottom ) {
-						this.x = Math.min( this.rect.right, this.x + 10 );
+				if ( this.keyR && this.x < this.rect.right ) { // 現在のx座標が右辺rect.rightより小さいことを判定
+					if ( this.y == this.rect.top || this.y == this.rect.bottom ) { // 自機が上辺か下辺のどちらにいるか判定
+						this.x = Math.min( this.rect.right, this.x + 10 ); // x座標を増やす
 					} else {
 						this.dx = 10;
+						// 辺を離れた座標として保存
 						this.sx = this.x;
 						this.sy = this.y;
 					}
@@ -204,22 +226,22 @@
 			this.draw = function( ctx ) {
 				// 現在の範囲
 				ctx.strokeStyle = 'blue';
-				ctx.strokeRect( this.rect.left, this.rect.top, this.rect.width(), this.rect.height() );
+				ctx.strokeRect( this.rect.left, this.rect.top, this.rect.width(), this.rect.height() ); // 自分の範囲を描画
 
 				// 自分自身を描画
 				ctx.drawImage( this.image, this.x - this.w / 2, this.y - this.w / 2 );
 
 				// シールド時の描画
-				if ( this.dx == 0 && this.dy == 0 ) {
+				if ( this.dx == 0 && this.dy == 0 ) { // 自分の範囲の枠の上にいるとき（自動で移動していないとき）
 					ctx.strokeStyle = 'white';
 					ctx.beginPath();
 					ctx.arc( this.x, this.y, 10 + this.count % 3, 0, Math.PI * 2, true );
 					ctx.stroke();
-				} else {
+				} else { // 移動中の場合
 					ctx.beginPath();
-					ctx.moveTo( this.sx, this.sy );
-					ctx.lineTo( this.x, this.y );
-					ctx.stroke();
+					ctx.moveTo( this.sx, this.sy ); // 辺を離れた座標から
+					ctx.lineTo( this.x, this.y ); // 現在位置まで
+					ctx.stroke(); // 直線を描画
 				}
 			}
 		}
@@ -260,9 +282,9 @@
 			enemy.update();
 			ship.update();
 
-			if (ship.dx != 0 || ship.dy != 0 ) {
-				if ( enemy.isHit() ) {
-					clearInterval( timer );
+			if (ship.dx != 0 || ship.dy != 0 ) { // 自機が移動中の場合
+				if ( enemy.isHit() ) { // 敵と衝突していないか判定
+					clearInterval( timer ); // 衝突している場合はタイマーを停止
 					timer = NaN;
 				}
 			}
@@ -275,7 +297,7 @@
 			ctx.fillStyle = 'black';
 			ctx.fillRect( 0, 0, 600, 700 );
 
-			// 矩形の塗りつぶし
+			// 矩形の塗りつぶし（すでに確保した領域部分）
 			areas.forEach( function(r) { r.draw( ctx ) } );
 
 			// 敵の描画
