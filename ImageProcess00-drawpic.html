@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Image Processing</title>
+</head>
+<body onload="init()">
+  <canvas id="field" width="250" height="250"></canvas>
+  <img src="img/moon02.png" alt="" id="picture" style="display:none;">
+  
+  <script>
+    var ctx;
+
+    function init() {
+      var canvas = document.getElementById( 'field' );
+      ctx = canvas.getContext( '2d' );
+
+      var pic = document.getElementById( 'picture' );
+      ctx.drawImage( pic, 0, 0, 250, 250 );
+    }
+  </script>
+</body>
+</html>
