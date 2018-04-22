@@ -19,6 +19,8 @@
 
       var pic = document.getElementById( 'picture' );
       ctx.drawImage( pic, 0, 0, 250, 250 );
+
+      src = ctx.getImageData( 0, 0, 250, 250 );
       img = ctx.createImageData( 250, 250 );
 
       processImage();
@@ -33,8 +35,9 @@
         img.data[i + 3] = src.data[i + 3]; // A
       }
     }
+
     function paint() {
-      ctx.putImageDate( img, 0, 0 );
+      ctx.putImageData( img, 0, 0 );
     }
   </script>
 </body>
